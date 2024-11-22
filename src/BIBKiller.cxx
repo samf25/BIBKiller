@@ -50,10 +50,10 @@ edm4hep::TrackCollection BIBKiller::operator()(
 		float theta = TMath::Pi() /2 - std::atan(state.tanLambda);
 		log << MSG::DEBUG << "\nPhi: " << phi << "\nTheta: " << theta << endmsg;
 		// Catch Overflow
-		if (fabs(theta) > m_ThetaMax || fabs(phi) > m_PhiMax) {
+		if (std::atan(state.tanLambda) > m_LambdaMax || fabs(phi) > m_PhiMax) {
 			(void)overflow.addTrack(track, m_Bz);
 		} else {
-			(void)grid[std::min(std::max(int(std::floor(phi/m_PhiMax*m_nPhiRows)), 0), m_nPhiRows -1) + std::min(int(std::floor(theta/m_ThetaMax*m_nThetaCols)), m_nThetaCols -1)*(m_nPhiRows)].addTrack(track, m_Bz);
+			(void)grid[std::min(std::max(int(std::floor(phi/m_PhiMax*m_nPhiRows)), 0), m_nPhiRows -1) + std::min(int(std::floor(theta/(TMath::Pi()/2-m_LambdaMax)*m_nThetaCols)), m_nThetaCols -1)*(m_nPhiRows)].addTrack(track, m_Bz);
 		}
 	}	
 

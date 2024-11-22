@@ -54,7 +54,7 @@ protected:
 	Gaudi::Property<int> m_nPhiRows{this, "nPhiRows", 10, "Number of grid rows in phi."};
 	Gaudi::Property<int> m_nThetaCols{this, "nThetaCols", 10, "Number of grid columns in theta."};
 	Gaudi::Property<float> m_PhiMax{this, "PhiMax", 2*TMath::Pi(), "Maximum allowed value of phi (absolute value)."};
-	Gaudi::Property<float> m_ThetaMax{this, "ThetaMax", 1.4, "Maximum allowed value of theta (absolute value)."};
+	Gaudi::Property<float> m_LambdaMax{this, "LambdaMax", 1.4, "Maximum allowed value of Lambda (absolute value)."};
 	Gaudi::Property<bool> m_KeepOverflow{this, "KeepOverflow", true, "Should the algorithm keep or remove all overflow."};
 
 
