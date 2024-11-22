@@ -13,6 +13,9 @@
 // k4FWCore
 #include <k4FWCore/DataHandle.h>
 
+#include <TH1.h>
+#include <TMath.h>
+
 #include <tuple>
 
 #include "SoftBox.hxx"
@@ -25,8 +28,7 @@
  * @author Samuel Ferraro
  * @version $Id$
  */
-struct BIBKiller final : Gaudi::Functional::Transformer <edm4hep::TrackCollection
-(
+struct BIBKiller final : Gaudi::Functional::Transformer <edm4hep::TrackCollection(
 	const edm4hep::TrackCollection&)> {
 public:
 	/**
@@ -35,7 +37,12 @@ public:
          * @param svcLoc a Service Locator passed by the Gaudi AlgManager
          */
 	BIBKiller(const std::string& name, ISvcLocator* svcLoc);
-	
+
+	/**
+ 	 * @brief Register and create all histograms (and Histogram Service)
+ 	 */
+	StatusCode initialize();
+		
 	/**
          * @brief BIBKiller operation. The workhorse of this Transformer.
          * @param trackCollection A collection of reconstructed tracks with BIB contamination
@@ -46,6 +53,13 @@ public:
 protected:
 	Gaudi::Property<int> m_nPhiRows{this, "nPhiRows", 10, "Number of grid rows in phi."};
 	Gaudi::Property<int> m_nThetaCols{this, "nThetaCols", 10, "Number of grid columns in theta."};
+	Gaudi::Property<float> m_PhiMax{this, "PhiMax", 2*TMath::Pi(), "Maximum allowed value of phi (absolute value)."};
+	Gaudi::Property<float> m_ThetaMax{this, "ThetaMax", 1.4, "Maximum allowed value of theta (absolute value)."};
+	Gaudi::Property<bool> m_KeepOverflow{this, "KeepOverflow", true, "Should the algorithm keep or remove all overflow."};
+
+
+
+	TH1* m_hptCuts;
 	
 	float m_Bz = 3.57;
 };
