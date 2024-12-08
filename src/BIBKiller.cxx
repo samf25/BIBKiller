@@ -41,27 +41,24 @@ edm4hep::TrackCollection BIBKiller::operator()(
 	edm4hep::TrackCollection outputTracks;
 	outputTracks.setSubsetCollection();
 	// Fill SoftKiller Grid
-	SoftBox grid[m_nPhiRows * m_nLambdaCols];
-	SoftBox overflow;
+	int nLamb = 2*std::floor(m_LambdaMax.value()/m_SideLength.value())+2;
+	int nPhi = 2*std::floor(m_PhiMax.value()/m_SideLength.value())+2;
+	SoftBox grid[nPhi * nLamb];
 	for (const auto& track : trackCollection) {
 		// Calculate Location
 		const edm4hep::TrackState& state = track.getTrackStates(edm4hep::TrackState::AtIP);
-		float phi = state.phi + TMath::Pi();
+		float phi = state.phi;
 		float lambda = std::atan(state.tanLambda);
 		log << MSG::DEBUG << "\nPhi: " << phi << "\nLambda: " << lambda << endmsg;
-		// Catch Overflow
-		if (std::atan(state.tanLambda) > m_LambdaMax || fabs(phi) > m_PhiMax) {
-			(void)overflow.addTrack(track, m_Bz);
-		} else {
-			(void)grid[std::min(std::max(int(std::floor(phi/m_PhiMax*m_nPhiRows)), 0), m_nPhiRows -1) + std::min(int(std::floor(lambda/m_LambdaMax*m_nLambdaCols)), m_nLambdaCols -1)*(m_nPhiRows)].addTrack(track, m_Bz);
-		}
+		int index = nLamb*std::floor(phi/m_SideLength.value()+nPhi/2)+std::floor(lambda/m_SideLength.value()+nLamb/2);
+		(void)grid[index].addTrack(track, m_Bz);
 	}	
 
 	// Find median pT of the SoftBoxes
 	float ptCut = 0;
 	std::vector<float> ptValues;
         // Extract all pT values from SoftBoxes into a vector
-        for (int i = 0; i < m_nPhiRows * m_nLambdaCols; ++i) {
+        for (int i = 0; i < nPhi * nLamb; ++i) {
                 ptValues.push_back(grid[i].getMaxPt());
         }
         // Sort the pT values
@@ -78,23 +75,13 @@ edm4hep::TrackCollection BIBKiller::operator()(
         }	
 	
 	m_hptCuts->Fill(ptCut);
-	
+
 	// Filter out all tracks below the pT cut
 	int count = 0;
 	for (SoftBox box : grid) {
 		log << MSG::DEBUG << "Number of Tracks in box " << count << ": " << box.getTracks().size() << "." << endmsg;
 		count++;
 		for (std::pair<const edm4hep::Track, float> pair : box.getTracks()) {
-			if (pair.second > ptCut) {
-				outputTracks.push_back(pair.first);
-			}
-		}
-	}
-
-	// Add overflow
-	log << MSG::DEBUG << "Number of Tracks in overflow: " << overflow.getTracks().size() << "." << endmsg;
-	if (m_KeepOverflow) {
-		for (std::pair<const edm4hep::Track, float> pair : overflow.getTracks()) {
 			if (pair.second > ptCut) {
 				outputTracks.push_back(pair.first);
 			}

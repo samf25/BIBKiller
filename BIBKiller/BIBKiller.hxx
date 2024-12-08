@@ -51,9 +51,8 @@ public:
 	edm4hep::TrackCollection operator()(const edm4hep::TrackCollection& trackCollection) const override;
 
 protected:
-	Gaudi::Property<int> m_nPhiRows{this, "nPhiRows", 10, "Number of grid rows in phi."};
-	Gaudi::Property<int> m_nLambdaCols{this, "nLambdaCols", 10, "Number of grid columns in lambda."};
-	Gaudi::Property<float> m_PhiMax{this, "PhiMax", 2*TMath::Pi(), "Maximum allowed value of phi (absolute value)."};
+	Gaudi::Property<float> m_SideLength{this, "SideLength", 0.9, "Side length of SoftKiller grid."};
+	Gaudi::Property<float> m_PhiMax{this, "PhiMax", TMath::Pi(), "Maximum allowed value of phi (absolute value)."};
 	Gaudi::Property<float> m_LambdaMax{this, "LambdaMax", 1.4, "Maximum allowed value of Lambda (absolute value)."};
 	Gaudi::Property<bool> m_KeepOverflow{this, "KeepOverflow", true, "Should the algorithm keep or remove all overflow."};
 
