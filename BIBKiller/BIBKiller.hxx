@@ -5,13 +5,9 @@
 #include <edm4hep/TrackCollection.h>
 #include <edm4hep/Track.h>
 
-// Gaudi
-#include <GaudiAlg/GaudiAlgorithm.h>
-#include <GaudiAlg/Transformer.h>
-#include <k4FWCore/BaseClass.h>
-
 // k4FWCore
 #include <k4FWCore/DataHandle.h>
+#include <k4FWCore/Transformer.h>
 
 #include <TH1.h>
 #include <TMath.h>
@@ -28,7 +24,7 @@
  * @author Samuel Ferraro
  * @version $Id$
  */
-struct BIBKiller final : Gaudi::Functional::Transformer <edm4hep::TrackCollection(
+struct BIBKiller final : k4FWCore::Transformer <edm4hep::TrackCollection(
 	const edm4hep::TrackCollection&)> {
 public:
 	/**
@@ -55,8 +51,6 @@ protected:
 	Gaudi::Property<float> m_PhiMax{this, "PhiMax", TMath::Pi(), "Maximum allowed value of phi (absolute value)."};
 	Gaudi::Property<float> m_LambdaMax{this, "LambdaMax", 1.4, "Maximum allowed value of Lambda (absolute value)."};
 	Gaudi::Property<bool> m_KeepOverflow{this, "KeepOverflow", true, "Should the algorithm keep or remove all overflow."};
-
-
 
 	TH1* m_hptCuts;
 	

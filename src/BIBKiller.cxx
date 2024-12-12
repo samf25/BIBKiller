@@ -1,8 +1,6 @@
 #include <edm4hep/TrackState.h>
-
-#include <podio/ROOTWriter.h>
-#include <podio/EventStore.h>
 #include <edm4hep/MutableTrack.h>
+
 #include <GaudiKernel/ITHistSvc.h>
 
 #include <utility>
@@ -14,8 +12,8 @@
 DECLARE_COMPONENT(BIBKiller)
 
 BIBKiller::BIBKiller(const std::string& name, ISvcLocator* svcLoc) : Transformer(name, svcLoc,
-	 KeyValue("InputTrackCollectionName", "Tracks"),
-	 KeyValue("OutputTrackCollectionName", "BIBKilledTracks")) {}
+	 KeyValues("InputTrackCollectionName", {"Tracks"}),
+	 KeyValues("OutputTrackCollectionName", {"BIBKilledTracks"})) {}
 
 // Implement Initializer
 StatusCode BIBKiller::initialize() {

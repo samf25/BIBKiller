@@ -12,7 +12,6 @@ FILE( GLOB _plugin_sources src/*.cxx )
 gaudi_add_module(BIBKillPlugins
 		SOURCES		${_plugin_sources}
 		LINK		Gaudi::GaudiKernel
-        			Gaudi::GaudiAlgLib
         			EDM4HEP::edm4hep
         			ROOT::Hist
         			${ROOT_LIBRARIES}
