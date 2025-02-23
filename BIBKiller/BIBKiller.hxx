@@ -53,7 +53,7 @@ protected:
 	Gaudi::Property<bool> m_KeepOverflow{this, "KeepOverflow", true, "Should the algorithm keep or remove all overflow."};
 
 	TH1* m_hptCuts;
-	
+	TH2* m_gridMaxes;
 	float m_Bz = 3.57;
 };
 #endif

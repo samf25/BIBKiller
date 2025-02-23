@@ -28,6 +28,11 @@ StatusCode BIBKiller::initialize() {
         m_hptCuts = new TH1F("SoftKiller pT Cuts", "pTCut;Events", 100, 0, 100);
         (void)histSvc->regHist("/histos/all/pTCuts", m_hptCuts);
 
+	m_gridMaxes = new TH3F("SoftBox pT Maxes", "Lambda;Phi", 2*std::floor(m_LambdaMax.value()/m_SideLength.value())+2, 0, m_LambdaMax.value(),
+								2*std::floor(m_PhiMax.value()/m_SideLength.value())+2, 0, m_PhiMax.value()),
+								100, 0, 100
+	(void)histSvc->regHist("/histos/all/gridMaxes", m_gridMaxes)
+
         return StatusCode::SUCCESS;
 }
 
@@ -84,6 +89,8 @@ edm4hep::TrackCollection BIBKiller::operator()(
 				outputTracks.push_back(pair.first);
 			}
 		}
+		const edm4hep::TrackState& firstState = box.getTracks().first.getTrackStates(edm4hep::TrackState::AtIP);
+		m_gridMaxes->Fill(std::atan(state.tanLambda), state.phi, box.getMaxPt());
 	}
 
 	return outputTracks;
