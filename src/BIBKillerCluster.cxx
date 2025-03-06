@@ -8,9 +8,9 @@
 
 DECLARE_COMPONENT(BIBKillerCluster)
 
-BIBKillerCluster::BIBKillerCluster(const std::string& name, ISvcLocator* svcLoc) : Transformer(name, svcLoc,
-	 KeyValues("InputClusterCollectionName", {"Clusters"}),
-	 KeyValues("OutputClusterCollectionName", {"BIBKilledClusters"})) {}
+BIBKillerCluster::BIBKillerCluster(const std::string& name, ISvcLocator* svcLoc) : MultiTransformer(name, svcLoc,
+	 KeyValues("InputClusterCollections", {"Clusters"}),
+	 KeyValues("OutputClusterCollections", {"BIBKilledClusters"})) {}
 
 // Implement Initializer
 StatusCode BIBKillerCluster::initialize() {
@@ -26,27 +26,40 @@ StatusCode BIBKillerCluster::initialize() {
 	else { m_hptCuts = new TH1F("SoftKiller E Cuts", "ECut;Events", 100, 0, 100); }
         (void)histSvc->regHist("/histos/all/pTCuts", m_hptCuts);
 
+	int nLamb = 2*std::floor(m_LambdaMax.value()/m_SideLength.value())+2;
+        int nPhi = 2*std::floor(m_PhiMax.value()/m_SideLength.value())+2;
+        m_gridMaxes = new TH3F("SoftBox pT Maxes", "Theta;Phi",
+                                                                nLamb, 0, nLamb, nPhi, 0, nPhi,
+                                                                100, 0, 100);
+        (void)histSvc->regHist("/histos/all/gridMaxes", m_gridMaxes);
+
         return StatusCode::SUCCESS;
 }
 
-edm4hep::ClusterCollection BIBKillerCluster::operator()(
-		const edm4hep::ClusterCollection& clusterCollection) const{
+std::tuple<std::vector<edm4hep::ClusterCollection>> BIBKillerCluster::operator()(
+		const std::vector<const edm4hep::ClusterCollection *>& clusterCollections) const{
 	MsgStream log(msgSvc(), name());
 
 	// Make output collection
-	edm4hep::ClusterCollection outputClusters;
-	outputClusters.setSubsetCollection();
+	std::vector<edm4hep::ClusterCollection> outputCollections;
+
 	// Fill SoftKiller Grid
 	int nLamb = 2*std::floor(m_LambdaMax.value()/m_SideLength.value())+2;
 	int nPhi = 2*std::floor(m_PhiMax.value()/m_SideLength.value())+2;
 	SoftBoxCluster grid[nPhi * nLamb];
-	for (const auto& cluster : clusterCollection) {
-		// Calculate Location
-		float phi = cluster.getPhi();
-		float theta = cluster.getITheta();
-		log << MSG::DEBUG << "\nPhi: " << phi << "\nTheta: " << theta<< endmsg;
-		int index = nLamb*std::floor(phi/m_SideLength.value()+nPhi/2)+std::floor(theta/m_SideLength.value()+nLamb/2);
-		(void)grid[index].addTrack(cluster, m_Bz, m_usePt);
+	for (int i = 0; i < clusterCollections.size(); i++) {
+		edm4hep::ClusterCollection output;
+		outputCollections.emplace_back(std::move(output));
+		outputCollections[i].setSubsetCollection();
+		log << MSG::DEBUG << (*(clusterCollections[i])).size() << endmsg;
+		for (const auto& cluster : *(clusterCollections[i])) {
+			// Calculate Location
+			float phi = cluster.getPhi();
+			float theta = cluster.getITheta();
+			log << MSG::DEBUG << "\nPhi: " << phi << "\nTheta: " << theta<< endmsg;
+			int index = nLamb*std::floor(phi/m_SideLength.value()+nPhi/2)+std::floor(theta/m_SideLength.value()+nLamb/2);
+			(void)grid[index].addCluster(cluster, m_Bz, m_usePt, i);
+		}
 	}	
 
 	// Find median pT of the SoftBoxes
@@ -71,18 +84,23 @@ edm4hep::ClusterCollection BIBKillerCluster::operator()(
 	
 	m_hptCuts->Fill(Cut);
 
-	// Filter out all tracks below the pT cut
+	// Filter out all clusters below the cut
 	int count = 0;
-	for (SoftBox box : grid) {
-		log << MSG::DEBUG << "Number of Clusters in box " << count << ": " << box.getClusters().size() << "." << endmsg;
-		count++;
-		for (std::pair<const edm4hep::Cluster, float> pair : box.getClusters()) {
-			if (pair.second > ptCut) {
-				outputClusters.push_back(pair.first);
-			}
-		}
+	for (int j = 0; j < nPhi * nLamb; j++) {
+                log << MSG::DEBUG << "Number of Tracks in box " << count << ": " << grid[j].getClusters().size() << "." << endmsg;
+                count++;
+                for (ClusterInfo info : grid[j].getClusters()) {
+                        if (info.val > Cut) {
+                                outputCollections[info.collection].push_back(info.cluster);
+                        }
+                }
+                m_gridMaxes->Fill(
+                        j % nLamb,
+                        std::floor((j-(j%nLamb)) / nLamb),
+                        (grid[j].getClusters().size() > 0) ? grid[j].getMax() : 0
+                );
 	}
-
-	return outputClusters;
+	return std::make_tuple(std::move(outputCollections));
 }
+
 

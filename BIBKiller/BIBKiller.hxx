@@ -10,6 +10,7 @@
 #include <k4FWCore/Transformer.h>
 
 #include <TH1.h>
+#include <TH3.h>
 #include <TMath.h>
 
 #include <tuple>
@@ -53,7 +54,7 @@ protected:
 	Gaudi::Property<bool> m_KeepOverflow{this, "KeepOverflow", true, "Should the algorithm keep or remove all overflow."};
 
 	TH1* m_hptCuts;
-	TH2* m_gridMaxes;
+	TH3* m_gridMaxes;
 	float m_Bz = 3.57;
 };
 #endif

@@ -9,6 +9,7 @@
 #include <k4FWCore/DataHandle.h>
 #include <k4FWCore/Transformer.h>
 
+#include <TH3.h>
 #include <TH1.h>
 #include <TMath.h>
 
@@ -24,8 +25,8 @@
  * @author Samuel Ferraro
  * @version $Id$
  */
-struct BIBKillerCluster final : k4FWCore::Transformer <edm4hep::ClusterCollection(
-	const edm4hep::ClusterCollection&)> {
+struct BIBKillerCluster final : k4FWCore::MultiTransformer <std::tuple<std::vector<edm4hep::ClusterCollection>>(
+	const std::vector<const edm4hep::ClusterCollection *>&)> {
 public:
 	/**
          * @brief Constructor for BIBKiller
@@ -44,15 +45,16 @@ public:
          * @param trackCollection A collection of reconstructed tracks with BIB contamination
          * @return A Track Collection SoftKiller applied
          */
-	edm4hep::ClusterCollection operator()(const edm4hep::ClusterCollection& clusterCollection) const override;
+	std::tuple<std::vector<edm4hep::ClusterCollection>> operator()(const std::vector<const edm4hep::ClusterCollection *>& clusterCollections) const override;
 
 protected:
 	Gaudi::Property<float> m_SideLength{this, "SideLength", 0.9, "Side length of SoftKiller grid."};
 	Gaudi::Property<float> m_PhiMax{this, "PhiMax", TMath::Pi(), "Maximum allowed value of phi (absolute value)."};
 	Gaudi::Property<float> m_LambdaMax{this, "LambdaMax", TMath::Pi()/4, "Maximum allowed value of Lambda (absolute value)."};
 	Gaudi::Property<bool>  m_KeepOverflow{this, "KeepOverflow", true, "Should the algorithm keep or remove all overflow."};
-	Gaudi::Property<bool>  m_usePt{this, "UsePt", true, "Should the algorithm use pT or E as the variable."}
+	Gaudi::Property<bool>  m_usePt{this, "UsePt", true, "Should the algorithm use pT or E as the variable."};
 
+	TH3* m_gridMaxes;
 	TH1* m_hptCuts;
 	
 	float m_Bz = 3.57;
