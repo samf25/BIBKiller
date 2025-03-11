@@ -15,11 +15,8 @@ BIBKillerCluster::BIBKillerCluster(const std::string& name, ISvcLocator* svcLoc)
 // Implement Initializer
 StatusCode BIBKillerCluster::initialize() {
         // Get Histogram and Data Services
-        ITHistSvc* histSvc{nullptr};
-        StatusCode sc1 = service("THistSvc", histSvc);
-        if ( sc1.isFailure() ) {
-                error() << "Could not locate HistSvc" << endmsg;
-                return StatusCode::FAILURE; }
+        SmartIF<ITHistSvc> histSvc;
+	histSvc = serviceLocator()->service("HistSvc");
 
         // Make Histogram
         if (m_usePt) { m_hptCuts = new TH1F("SoftKiller pT Cuts", "pTCut;Events", 100, 0, 100); }

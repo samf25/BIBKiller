@@ -18,11 +18,8 @@ BIBKiller::BIBKiller(const std::string& name, ISvcLocator* svcLoc) : Transformer
 // Implement Initializer
 StatusCode BIBKiller::initialize() {
         // Get Histogram and Data Services
-        ITHistSvc* histSvc{nullptr};
-        StatusCode sc1 = service("THistSvc", histSvc);
-        if ( sc1.isFailure() ) {
-                error() << "Could not locate HistSvc" << endmsg;
-                return StatusCode::FAILURE; }
+        SmartIF<ITHistSvc> histSvc;
+		histSvc = serviceLocator()->service("HistSvc");
 
         // Make Histogram
         m_hptCuts = new TH1F("SoftKiller pT Cuts", "pTCut;Events", 100, 0, 100);
@@ -30,12 +27,12 @@ StatusCode BIBKiller::initialize() {
 
         int nLamb = 2*std::floor(m_LambdaMax.value()/m_SideLength.value())+2;
         int nPhi = 2*std::floor(m_PhiMax.value()/m_SideLength.value())+2;
-	m_gridMaxes = new TH3F("SoftBox pT Maxes", "Lambda;Phi",
+		m_gridMaxes = new TH3F("SoftBox pT Maxes", "Lambda;Phi",
 								nLamb, 0, nLamb, nPhi, 0, nPhi,
 //								2*std::floor(m_LambdaMax.value()/m_SideLength.value())+2, 0, m_LambdaMax.value(),
 //								2*std::floor(m_PhiMax.value()/m_SideLength.value())+2, 0, m_PhiMax.value(),
 								100, 0, 100);
-	(void)histSvc->regHist("/histos/all/gridMaxes", m_gridMaxes);
+		(void)histSvc->regHist("/histos/all/gridMaxes", m_gridMaxes);
 
         return StatusCode::SUCCESS;
 }
