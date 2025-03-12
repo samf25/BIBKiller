@@ -16,7 +16,7 @@ BIBKillerCluster::BIBKillerCluster(const std::string& name, ISvcLocator* svcLoc)
 StatusCode BIBKillerCluster::initialize() {
         // Get Histogram and Data Services
         SmartIF<ITHistSvc> histSvc;
-	histSvc = serviceLocator()->service("HistSvc");
+	histSvc = serviceLocator()->service("THistSvc");
 
         // Make Histogram
         if (m_usePt) { m_hptCuts = new TH1F("SoftKiller pT Cuts", "pTCut;Events", 100, 0, 100); }
@@ -35,8 +35,6 @@ StatusCode BIBKillerCluster::initialize() {
 
 std::tuple<std::vector<edm4hep::ClusterCollection>> BIBKillerCluster::operator()(
 		const std::vector<const edm4hep::ClusterCollection *>& clusterCollections) const{
-	MsgStream log(msgSvc(), name());
-
 	// Make output collection
 	std::vector<edm4hep::ClusterCollection> outputCollections;
 
@@ -48,12 +46,12 @@ std::tuple<std::vector<edm4hep::ClusterCollection>> BIBKillerCluster::operator()
 		edm4hep::ClusterCollection output;
 		outputCollections.emplace_back(std::move(output));
 		outputCollections[i].setSubsetCollection();
-		log << MSG::DEBUG << (*(clusterCollections[i])).size() << endmsg;
+		debug() << (*(clusterCollections[i])).size() << endmsg;
 		for (const auto& cluster : *(clusterCollections[i])) {
 			// Calculate Location
 			float phi = cluster.getPhi();
 			float theta = cluster.getITheta();
-			log << MSG::DEBUG << "\nPhi: " << phi << "\nTheta: " << theta<< endmsg;
+			debug() << "\nPhi: " << phi << "\nTheta: " << theta<< endmsg;
 			int index = nLamb*std::floor(phi/m_SideLength.value()+nPhi/2)+std::floor(theta/m_SideLength.value()+nLamb/2);
 			(void)grid[index].addCluster(cluster, m_Bz, m_usePt, i);
 		}
@@ -84,7 +82,7 @@ std::tuple<std::vector<edm4hep::ClusterCollection>> BIBKillerCluster::operator()
 	// Filter out all clusters below the cut
 	int count = 0;
 	for (int j = 0; j < nPhi * nLamb; j++) {
-                log << MSG::DEBUG << "Number of Tracks in box " << count << ": " << grid[j].getClusters().size() << "." << endmsg;
+                debug() << "Number of Tracks in box " << count << ": " << grid[j].getClusters().size() << "." << endmsg;
                 count++;
                 for (ClusterInfo info : grid[j].getClusters()) {
                         if (info.val > Cut) {

@@ -19,7 +19,7 @@ BIBKiller::BIBKiller(const std::string& name, ISvcLocator* svcLoc) : Transformer
 StatusCode BIBKiller::initialize() {
         // Get Histogram and Data Services
         SmartIF<ITHistSvc> histSvc;
-		histSvc = serviceLocator()->service("HistSvc");
+		histSvc = serviceLocator()->service("THistSvc");
 
         // Make Histogram
         m_hptCuts = new TH1F("SoftKiller pT Cuts", "pTCut;Events", 100, 0, 100);
@@ -39,8 +39,6 @@ StatusCode BIBKiller::initialize() {
 
 edm4hep::TrackCollection BIBKiller::operator()(
 		const edm4hep::TrackCollection& trackCollection) const{
-	MsgStream log(msgSvc(), name());
-
 	// Make output collection
 	edm4hep::TrackCollection outputTracks;
 	outputTracks.setSubsetCollection();
@@ -53,7 +51,7 @@ edm4hep::TrackCollection BIBKiller::operator()(
 		const edm4hep::TrackState& state = track.getTrackStates(edm4hep::TrackState::AtIP);
 		float phi = state.phi;
 		float lambda = std::atan(state.tanLambda);
-		log << MSG::DEBUG << "\nPhi: " << phi << "\nLambda: " << lambda << endmsg;
+		debug() << "\nPhi: " << phi << "\nLambda: " << lambda << endmsg;
 		int index = nLamb*std::floor(phi/m_SideLength.value()+nPhi/2)+std::floor(lambda/m_SideLength.value()+nLamb/2);
 		(void)grid[index].addTrack(track, m_Bz);
 	}	
@@ -83,7 +81,7 @@ edm4hep::TrackCollection BIBKiller::operator()(
 	// Filter out all tracks below the pT cut
 	int count = 0;
 	for (int j = 0; j < nPhi * nLamb; j++) {
-		log << MSG::DEBUG << "Number of Tracks in box " << count << ": " << grid[j].getTracks().size() << "." << endmsg;
+		debug() << "Number of Tracks in box " << count << ": " << grid[j].getTracks().size() << "." << endmsg;
 		count++;
 		for (std::pair<const edm4hep::Track, float> pair : grid[j].getTracks()) {
 			if (pair.second > ptCut) {
