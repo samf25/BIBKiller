@@ -1,9 +1,9 @@
-#ifndef BIBKillerCluster_h
-#define BIBKillerCluster_h 1
+#ifndef BIBKillerTrackHit_h
+#define BIBKillerTrackHit_h 1
 
 // edm4hep
-#include <edm4hep/ClusterCollection.h>
-#include <edm4hep/Cluster.h>
+#include <edm4hep/TrackerHitPlaneCollection.h>
+#include <edm4hep/TrackerHitPlane.h>
 
 // k4FWCore
 #include <k4FWCore/DataHandle.h>
@@ -15,7 +15,7 @@
 
 #include <tuple>
 
-#include "SoftBoxCluster.hxx"
+#include "SoftBoxTrackHit.hxx"
 
 //! \brief Apply the SoftDrop Algorithm
 /**
@@ -25,14 +25,14 @@
  * @author Samuel Ferraro
  * @version $Id$
  */
-struct BIBKillerCluster final : k4FWCore::MultiTransformer <std::tuple<edm4hep::ClusterCollection>(const edm4hep::ClusterCollection&)> {
+struct BIBKillerTrackHit final : k4FWCore::MultiTransformer <std::tuple<edm4hep::TrackerHitPlaneCollection, edm4hep::TrackerHitPlaneCollection>(const edm4hep::TrackerHitPlaneCollection&, const edm4hep::TrackerHitPlaneCollection&)> {
 public:
 	/**
          * @brief Constructor for BIBKiller
          * @param name unique string identifier for this instance
          * @param svcLoc a Service Locator passed by the Gaudi AlgManager
          */
-	BIBKillerCluster(const std::string& name, ISvcLocator* svcLoc);
+	BIBKillerTrackHit(const std::string& name, ISvcLocator* svcLoc);
 
 	/**
  	 * @brief Register and create all histograms (and Histogram Service)
@@ -44,7 +44,7 @@ public:
          * @param trackCollection A collection of reconstructed tracks with BIB contamination
          * @return A Track Collection SoftKiller applied
          */
-	std::tuple<edm4hep::ClusterCollection> operator()(const edm4hep::ClusterCollection& clusterCollections) const override;
+	std::tuple<edm4hep::TrackerHitPlaneCollection, edm4hep::TrackerHitPlaneCollection> operator()(const edm4hep::TrackerHitPlaneCollection& barrelCollections, const edm4hep::TrackerHitPlaneCollection& endcapCollections) const override;
 
 protected:
 	Gaudi::Property<float> m_SideLength{this, "SideLength", 0.9, "Side length of SoftKiller grid."};

@@ -33,29 +33,32 @@ StatusCode BIBKillerCluster::initialize() {
         return StatusCode::SUCCESS;
 }
 
-std::tuple<std::vector<edm4hep::ClusterCollection>> BIBKillerCluster::operator()(
-		const std::vector<const edm4hep::ClusterCollection *>& clusterCollections) const{
+std::tuple<edm4hep::ClusterCollection> BIBKillerCluster::operator()(
+		const edm4hep::ClusterCollection& clusterCollection) const{
 	// Make output collection
-	std::vector<edm4hep::ClusterCollection> outputCollections;
+	edm4hep::ClusterCollection outputCollection;
+	outputCollection.setSubsetCollection();
 
 	// Fill SoftKiller Grid
-	int nLamb = 2*std::floor(m_LambdaMax.value()/m_SideLength.value())+2;
+	int nLamb = std::floor(m_LambdaMax.value()/m_SideLength.value())+1;
 	int nPhi = 2*std::floor(m_PhiMax.value()/m_SideLength.value())+2;
-	SoftBoxCluster grid[nPhi * nLamb];
-	for (int i = 0; i < clusterCollections.size(); i++) {
-		edm4hep::ClusterCollection output;
-		outputCollections.emplace_back(std::move(output));
-		outputCollections[i].setSubsetCollection();
-		debug() << (*(clusterCollections[i])).size() << endmsg;
-		for (const auto& cluster : *(clusterCollections[i])) {
-			// Calculate Location
-			float phi = cluster.getPhi();
-			float theta = cluster.getITheta();
-			debug() << "\nPhi: " << phi << "\nTheta: " << theta<< endmsg;
-			int index = nLamb*std::floor(phi/m_SideLength.value()+nPhi/2)+std::floor(theta/m_SideLength.value()+nLamb/2);
-			(void)grid[index].addCluster(cluster, m_Bz, m_usePt, i);
-		}
-	}	
+	std::vector<SoftBoxCluster> grid(nPhi * nLamb);
+
+        uint64_t collectionID = clusterCollection.getID();
+	debug() << clusterCollection.size() << endmsg;
+
+	for (int j = 0; j < clusterCollection.size(); j++)
+        {
+		// Calculate Location
+                edm4hep::Cluster cluster = clusterCollection.at(j);
+
+		float phi = cluster.getPhi();
+		float theta = cluster.getITheta();
+                float energy = cluster.getEnergy();
+
+                int index = nLamb*std::floor(phi/m_SideLength.value()+nPhi/2)+std::floor(theta/m_SideLength.value());
+		(void)grid[index].addCluster(j, energy, theta, m_usePt);
+	}
 
 	// Find median pT of the SoftBoxes
 	float Cut = 0;
@@ -82,11 +85,14 @@ std::tuple<std::vector<edm4hep::ClusterCollection>> BIBKillerCluster::operator()
 	// Filter out all clusters below the cut
 	int count = 0;
 	for (int j = 0; j < nPhi * nLamb; j++) {
-                debug() << "Number of Tracks in box " << count << ": " << grid[j].getClusters().size() << "." << endmsg;
+                //debug() << "Number of Clusters in box " << count << ": " << grid[j].getClusters().size() << "." << endmsg;
                 count++;
+                if (j%nLamb==0 ) {debug()<<"\n";}
+                debug() << grid[j].getMax() <<"  ";
                 for (ClusterInfo info : grid[j].getClusters()) {
                         if (info.val > Cut) {
-                                outputCollections[info.collection].push_back(info.cluster);
+                                edm4hep::Cluster cluster = clusterCollection.at(info.index);
+                                outputCollection.push_back(cluster);
                         }
                 }
                 m_gridMaxes->Fill(
@@ -95,7 +101,8 @@ std::tuple<std::vector<edm4hep::ClusterCollection>> BIBKillerCluster::operator()
                         (grid[j].getClusters().size() > 0) ? grid[j].getMax() : 0
                 );
 	}
-	return std::make_tuple(std::move(outputCollections));
+        debug() << "Number of output clusters: " << outputCollection.size() << endmsg;
+	return std::make_tuple(std::move(outputCollection));
 }
 
 
