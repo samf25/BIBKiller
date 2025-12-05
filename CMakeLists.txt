@@ -14,6 +14,7 @@ gaudi_add_module(BIBKillPlugins
 		LINK		Gaudi::GaudiKernel
         			EDM4HEP::edm4hep
         			ROOT::Hist
+					DD4hep::DDCore
         			${ROOT_LIBRARIES}
         			k4FWCore::k4FWCore )
 

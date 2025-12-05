@@ -61,6 +61,9 @@ std::tuple<edm4hep::CalorimeterHitCollection, edm4hep::CalorimeterHitCollection>
 
         for (int layerIDX = 0; layerIDX < m_layerBins.value().size() -1; layerIDX++) {
 
+                // Create grid for this layer
+	        std::vector<SoftBoxCalo> grid(nPhi * nTheta);
+
                 // Collection the collections
                 std::vector<const edm4hep::CalorimeterHitCollection*> combinedCollections;
                 if (barrelCollections.size() >0) {
@@ -79,11 +82,12 @@ std::tuple<edm4hep::CalorimeterHitCollection, edm4hep::CalorimeterHitCollection>
 
                         for (int j = 0; j < collection->size(); j++)
                         {
-                                int layer = bitFieldCoder.get(hit.cellID, "layer");
-                                if (layer < m_layerBins[layerIDX] || layer > m_layerBins[layerIDX + 1]) continue;
 
                                 // Calculate Location
                                 edm4hep::CalorimeterHit caloHit = collection->at(j);
+                                int layer = bitFieldCoder.get(caloHit.getCellID(), "layer");
+                                if (layer < m_layerBins[layerIDX] || layer >= m_layerBins[layerIDX + 1]) continue;
+
                                 edm4hep::Vector3f pos = caloHit.getPosition();
                                 // Improved phi calculation using atan2
                                 float phi = std::atan2(pos.y, pos.x) + TMath::Pi();

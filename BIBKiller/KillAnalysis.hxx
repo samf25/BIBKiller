@@ -5,7 +5,6 @@
 #include <edm4hep/CaloHitSimCaloHitLinkCollection.h>
 #include <edm4hep/CalorimeterHitCollection.h>
 #include <edm4hep/MCParticleCollection.h>
-#include <edm4hep/CaloHitSimCaloHitLink.h>
 #include <edm4hep/CaloHitContribution.h>
 #include <edm4hep/SimCalorimeterHit.h>
 #include <edm4hep/CalorimeterHit.h>
